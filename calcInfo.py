@@ -68,9 +68,9 @@ def parse_args():
     # 程序简介
     parser = argparse.ArgumentParser(description='Calculate entropy of file')
     # Input 参数, 需要计算信息熵的文件路径, 若没有输入默认为False字符串
-    parser.add_argument('INPUT', help='File to calc entropy', nargs='?', default='0')
+    parser.add_argument('INPUT', help='File to calc entropy', nargs='?')
     # Output 参数, 用于附加计算结果的CSV文件的路径, 若没有输入默认为False字符串
-    parser.add_argument('OUTPUT', help='CSV file to append calc result', nargs='?', default='0')
+    parser.add_argument('OUTPUT', help='CSV file to append calc result', nargs='?')
     # verbose 参数, 用于控制是否显示log
     parser.add_argument('-v', '--verbose', action="store_true",
                         help='show debug message')
@@ -93,7 +93,7 @@ def parse_args():
     import logging
 
     # 判断用户是否输入INPUT与OUTPUT
-    if args.INPUT == '0' or args.OUTPUT == '0':
+    if not args.INPUT or not args.OUTPUT:
         # 若输入操作(-v, -m, -p, -s),提示错误并返回
         if args.verbose or (not not(args.method or args.export_S or args.export_P)):
             print("Error: Option(-v, -m, -p, -s) required arguments: 'INPUT', 'OUTPUT'")
