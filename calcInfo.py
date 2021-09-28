@@ -1,4 +1,5 @@
 import numpy as np
+import csv
 
 
 def probability(arr):
@@ -50,7 +51,6 @@ def append_to_csv_by_row(path, row):
     :param row: 要附加的行
     :return: None
     """
-    import csv
     # 以附加模式打开文件
     with open(path, 'a+', newline='') as csv_file:
         csv_writer = csv.writer(csv_file)
@@ -67,13 +67,22 @@ def parse_args():
     import argparse
     # 程序简介
     parser = argparse.ArgumentParser(description='Calculate entropy of file')
-    # Input 参数, 需要计算信息熵的文件路径
-    parser.add_argument('INPUT', help='File to calc entropy')
-    # Output 参数, 用于附加计算结果的CSV文件的路径
-    parser.add_argument('OUTPUT', help='CSV file to append calc result')
+    # Input 参数, 需要计算信息熵的文件路径, 若没有输入默认为False字符串
+    parser.add_argument('INPUT', help='File to calc entropy', nargs='?', default='0')
+    # Output 参数, 用于附加计算结果的CSV文件的路径, 若没有输入默认为False字符串
+    parser.add_argument('OUTPUT', help='CSV file to append calc result', nargs='?', default='0')
     # verbose 参数, 用于控制是否显示log
     parser.add_argument('-v', '--verbose', action="store_true",
                         help='show debug message')
+    # method 参数, 用于控制输出概率数组和符合自信息数组
+    parser.add_argument('-m', '--method', choices=['probability', 'self_info'],
+                        help='use method P(self_info) to calculate probability(self information)')
+    # export-P 参数, 用于控制是否输出概率数组文件
+    parser.add_argument('-p', '--export_P',
+                        help='export probability to P_FILE')
+    # export-S 参数, 用于控制是否输出概率数组文件
+    parser.add_argument('-s', '--export_S',
+                        help='export self information to P_FILE')
     # test 参数, 用于控制是否进行自动测试
     parser.add_argument('-t', '--test', action="store_true",
                         help='run auto test before calc')
@@ -82,37 +91,62 @@ def parse_args():
     args = parser.parse_args()
 
     import logging
-    # 配置日志输出等级
-    logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
-    # 提示启用详细信息输出
-    logging.debug('Verbosity turned on')
 
-    # 输出命令信息
-    logging.info(f'INPUT:{args.INPUT}, OUTPUT:{args.OUTPUT}')
+    # 判断用户是否输入INPUT与OUTPUT
+    if args.INPUT == '0' or args.OUTPUT == '0':
+        # 若输入操作(-v, -m, -p, -s),提示错误并返回
+        if args.verbose or (not not(args.method or args.export_S or args.export_P)):
+            print("Error: Option(-v, -m, -p, -s) required arguments: 'INPUT', 'OUTPUT'")
+            return
+    else:
+        # 配置日志输出等级
+        logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
+        # 输出命令信息
+        logging.info(f'INPUT:{args.INPUT}, OUTPUT:{args.OUTPUT}')
+        # 将文件读入到一个np.array中
+        file_arr = open_file_as_binary_array(args.INPUT)
+        # 计算概率数组
+        p_arr = probability(file_arr)
+        # 计算文件自信息量
+        self_information = self_info(p_arr)
+        # 计算文件信息熵
+        file_entropy = entropy(p_arr)
+        # 附加计算结果到CSV文件
+        append_to_csv_by_row(args.OUTPUT, [args.INPUT, file_arr.size, file_entropy])
+        # 输出计算结果保存完成
+        logging.info(f'Saved entropy to:{args.OUTPUT}')
 
+        # 启用详细信息输出文件名, 文件大小, 信息熵等信息
+        logging.debug('Verbosity turned on\n' f'File:{args.INPUT}\nSize:{file_arr.size} bytes\n'
+                      f'Data array:{file_arr}\nEntropy:{file_entropy} bit/byte')
+
+        # 若需使用方法probability查看符合概率数组
+        if args.method == 'probability':
+            # 输出概率数组
+            logging.info(f'Probability:\n{p_arr}')
+        # 若需使用方法self_info查看符合自信息数组
+        elif args.method == 'self_info':
+            # 输出自信息量
+            logging.info(f'Self Info:\n{self_information}')
+
+        # 若需将概率数组写入文件
+        if not not args.export_P:
+            with open(args.export_P, 'a+', newline='') as P_csv:
+                csv_writer = csv.writer(P_csv)
+                csv_writer.writerows(np.squeeze(np.dstack((np.arange(256), p_arr))))
+                P_csv.close()
+        # 若需将自信息数组写入文件
+        if not not args.export_S:
+            with open(args.export_S, 'a+', newline='') as self_info_csv:
+                csv_writer = csv.writer(self_info_csv)
+                csv_writer.writerows(np.squeeze(np.dstack((np.arange(256), self_information))))
+                self_info_csv.close()
+
+    # 判断是否进行单元测试
     if args.test:
         logging.info('Begin Unit Test')
         import subprocess
         subprocess.call(['python', 'TestCalcInfo.py'])
-
-    # 将文件读入到一个np.array中
-    file_arr = open_file_as_binary_array(args.INPUT)
-    # 输出array内容
-    logging.debug(f'File:{args.INPUT}\n Size:{file_arr.size} byte(s)\n Data array:{file_arr}')
-    # 计算概率数组
-    p_arr = probability(file_arr)
-    # 输出概率数组
-    logging.debug(f'Probability:\n{p_arr}')
-    # 输出自信息量
-    logging.debug(f'Self Info:\n{self_info(p_arr)}')
-    # 计算文件信息熵
-    file_entropy = entropy(p_arr)
-    # 输出文件信息熵
-    logging.debug(f'Entropy:{file_entropy}')
-    # 附加计算结果到CSV文件
-    append_to_csv_by_row(args.OUTPUT, [args.INPUT, file_arr.size, file_entropy])
-    # 输出计算结果保存完成
-    logging.info(f'Saved entropy to:{args.OUTPUT}')
 
 
 if __name__ == '__main__':
