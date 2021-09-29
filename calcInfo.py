@@ -67,11 +67,11 @@ def parse_args():
     import argparse
     # 程序简介
     parser = argparse.ArgumentParser(description='Calculate entropy of file')
-    # Input 参数, 需要计算信息熵的文件路径, 若没有输入默认为False字符串
+    # Input 参数, 需要计算信息熵的文件路径
     parser.add_argument('INPUT', help='File to calc entropy', nargs='?')
-    # Output 参数, 用于附加计算结果的CSV文件的路径, 若没有输入默认为False字符串
+    # Output 参数, 用于附加计算结果的CSV文件的路径
     parser.add_argument('OUTPUT', help='CSV file to append calc result', nargs='?')
-    # verbose 参数, 用于控制是否显示log
+    # verbose 参数, 用于控制log等级
     parser.add_argument('-v', '--verbose', action="store_true",
                         help='show debug message')
     # method 参数, 用于控制输出概率数组和符合自信息数组
