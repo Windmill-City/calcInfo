@@ -1,3 +1,5 @@
+import timeit
+
 import numpy as np
 import csv
 
@@ -106,6 +108,8 @@ def parse_args():
         # 将文件读入到一个np.array中
         file_arr = open_file_as_binary_array(args.INPUT)
         # 计算概率数组
+        globals()['file_arr'] = file_arr
+        logging.info(f'Timeit[probability]:{timeit.timeit("probability(file_arr)", globals=globals(), number=10)}')
         p_arr = probability(file_arr)
         # 计算文件自信息量
         self_information = self_info(p_arr)
