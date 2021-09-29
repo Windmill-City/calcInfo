@@ -78,7 +78,7 @@ def parse_args():
                         help='show debug message')
     # method 参数, 用于控制输出概率数组和符合自信息数组
     parser.add_argument('-m', '--method', choices=['probability', 'self_info'],
-                        help='use method P(self_info) to calculate probability(self information)')
+                        help='use method probability(self_info) to calculate probability(self information)')
     # export-P 参数, 用于控制是否输出概率数组文件
     parser.add_argument('-p', '--export_P',
                         help='export csv file of probability to export_P')
