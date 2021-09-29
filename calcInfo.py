@@ -108,8 +108,6 @@ def parse_args():
         # 将文件读入到一个np.array中
         file_arr = open_file_as_binary_array(args.INPUT)
         # 计算概率数组
-        globals()['file_arr'] = file_arr
-        logging.info(f'Timeit[probability]:{timeit.timeit("probability(file_arr)", globals=globals(), number=10)}')
         p_arr = probability(file_arr)
         # 计算文件自信息量
         self_information = self_info(p_arr)
@@ -121,8 +119,11 @@ def parse_args():
         logging.info(f'Saved entropy to:{args.OUTPUT}')
 
         # 启用详细信息输出文件名, 文件大小, 信息熵等信息
+        globals()['file_arr'], globals()['p_arr'] = file_arr, p_arr
+        calc_time = timeit.timeit("probability(file_arr)", "entropy(p_arr)", globals=globals(), number=1)
         logging.debug('Verbosity turned on\n' f'File:{args.INPUT}\nSize:{file_arr.size} bytes\n'
-                      f'Data array:{file_arr}\nEntropy:{file_entropy} bit/byte')
+                      f'Data array:{file_arr}\nEntropy:{file_entropy} bit/byte\n'
+                      f'Calc_time:{round(calc_time, 5)} sec')
 
         # 若需使用方法probability查看符合概率数组
         if args.method == 'probability':
