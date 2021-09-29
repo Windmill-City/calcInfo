@@ -79,10 +79,10 @@ def parse_args():
                         help='use method P(self_info) to calculate probability(self information)')
     # export-P 参数, 用于控制是否输出概率数组文件
     parser.add_argument('-p', '--export_P',
-                        help='export probability to P_FILE')
-    # export-S 参数, 用于控制是否输出概率数组文件
+                        help='export csv file of probability to export_P')
+    # export-S 参数, 用于控制是否输出自信息量数组文件
     parser.add_argument('-s', '--export_S',
-                        help='export self information to P_FILE')
+                        help='export csv file of self information to export_S')
     # test 参数, 用于控制是否进行自动测试
     parser.add_argument('-t', '--test', action="store_true",
                         help='run auto test before calc')
@@ -135,7 +135,7 @@ def parse_args():
                 csv_writer = csv.writer(P_csv)
                 csv_writer.writerows(np.squeeze(np.dstack((np.arange(256), p_arr))))
                 P_csv.close()
-        # 若需将自信息数组写入文件
+        # 若需将自信息量数组写入文件
         if not not args.export_S:
             with open(args.export_S, 'a+', newline='') as self_info_csv:
                 csv_writer = csv.writer(self_info_csv)
