@@ -77,8 +77,8 @@ def parse_args():
     parser.add_argument('-v', '--verbose', action="store_true",
                         help='show debug message')
     # method 参数, 用于控制输出概率数组和符合自信息数组
-    parser.add_argument('-m', '--method', choices=['probability', 'self_info'],
-                        help='use method probability(self_info) to calculate probability(self information)')
+    parser.add_argument('-m', '--method', choices=['P', 'S'],
+                        help='use method P(S) to print probability(self information)')
     # export-P 参数, 用于控制是否输出概率数组文件
     parser.add_argument('-p', '--export_P',
                         help='export csv file of probability to export_P')
@@ -126,11 +126,11 @@ def parse_args():
                       f'Calc_time:{round(calc_time, 5)} sec')
 
         # 若需使用方法probability查看符合概率数组
-        if args.method == 'probability':
+        if args.method == 'P':
             # 输出概率数组
             logging.info(f'Probability:\n{p_arr}')
         # 若需使用方法self_info查看符合自信息数组
-        elif args.method == 'self_info':
+        elif args.method == 'S':
             # 输出自信息量
             logging.info(f'Self Info:\n{self_information}')
 
