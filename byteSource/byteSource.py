@@ -57,7 +57,7 @@ def gen_msg_arr(symbol_cumsum, symbol_random):
     `np.searchsorted`的过程就是在累积概率分布F(i)中随机取出符合指定概率分布P的消息
     而`index_0`恰好对应的就是随机取出的消息
     """
-    return np.searchsorted(symbol_cumsum, symbol_random)
+    return np.array(np.searchsorted(symbol_cumsum, symbol_random), dtype='uint8')
 
 
 def save_as_byte_source(path, byte_source):
@@ -92,6 +92,14 @@ def read_as_probability_distribution(path):
     return symbol_probability
 
 
+def generate_bDMS_extended_source_prob_file(p_true, path):
+    prob = np.array([p_true**(bin(i).count('1'))*(1-p_true)**(8-bin(i).count('1')) for i in range(256)])
+    with open(path, 'w') as p_file:
+        for i in range(prob.size):
+            p_file.write('"%d","%g"\n' % (i, prob[i]))
+        p_file.close()
+
+
 def save_as_csv(path, data):
     """
     将数据保存到指定路径的CSV文件当中
@@ -116,12 +124,12 @@ def parse_args():
     import argparse
     # 程序简介
     parser = argparse.ArgumentParser(description='Generate information source by probability distribution')
-    # PROBABILITY_CSV - 概率分布数据, CSV格式
-    parser.add_argument('PROBABILITY_CSV', help='Probability distribution, in CSV format', nargs='?')
-    # BYTE_SOURCE - 信源数据保存路径
-    parser.add_argument('BYTE_SOURCE', help='Where to save the byte source data', nargs='?')
-    # SIZE - 产生的信源的数据个数
-    parser.add_argument('SIZE', help='How much msg we need to generate', nargs='?', type=int)
+    # INPUT - 概率分布数据, CSV格式
+    parser.add_argument('INPUT', help='Probability distribution, in CSV format', nargs='?')
+    # OUTPUT - 信源数据保存路径
+    parser.add_argument('OUTPUT', help='Where to save the byte source data', nargs='?')
+    # MSG_LEN - 产生的信源的数据个数
+    parser.add_argument('MSG_LEN', help='How much msg we need to generate', nargs='?', type=int)
     # -v 输出debug信息
     parser.add_argument('-v', '--verbose', action="store_true",
                         help='log level set to [logging.DEBUG]')
@@ -131,6 +139,9 @@ def parse_args():
     # -R <RAND_CSV> - 输出随机数数组到指定文件, CSV格式
     parser.add_argument('-R', '--RAND_CSV', action='store', nargs=1,
                         help='Save random array to file, in CSV format')
+    # -e 输出二元离散无记忆信源的8次扩展信源的概率分布文件, csv格式
+    parser.add_argument('-e', '--prob_path', metavar='p_true, path',
+                        help='probability of true and the path of the file to be saved', nargs=2)
     # -t - 运行测试
     parser.add_argument('-t', '--test', action="store_true",
                         help='run tests')
@@ -143,18 +154,26 @@ def parse_args():
     logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
     logging.debug(f'Command Line:{args}')
 
+    # 输出二元离散无记忆信源的8次扩展信源的概率分布文件
+    if args.prob_path:
+        p_true, extended_prob_path = args.prob_path
+        if not p_true.isdigit() or 0 > float(p_true) or 1 < float(p_true):
+            parser.error('p_true must be in interval of [0, 1]')
+        generate_bDMS_extended_source_prob_file(float(p_true), extended_prob_path)
+
     if args.test:
         logging.info('Begin Unit Test')
         import subprocess
         subprocess.call(['python', 'TestByteSource.py'])
         return
-    else:
-        if not args.PROBABILITY_CSV or not args.BYTE_SOURCE or not args.SIZE:
-            parser.error('Missing required argument(s)')
+    elif not args.INPUT or not args.OUTPUT or not args.MSG_LEN:
+        if not (args.INPUT or args.OUTPUT or args.MSG_LEN):
+            return
+        parser.error('Missing required argument(s)[INPUT, OUTPUT, MSG_LEN]')
 
     # 从指定路径读入概率分布P
-    logging.debug(f'Read Probability from:{args.PROBABILITY_CSV}')
-    symbol_prob = read_as_probability_distribution(args.PROBABILITY_CSV)
+    logging.debug(f'Read Probability from:{args.INPUT}')
+    symbol_prob = read_as_probability_distribution(args.INPUT)
     # Step 1: 计算累积概率分布F
     logging.debug('Evaluating CDF')
     symbol_cumsum = CDF(symbol_prob)
@@ -162,9 +181,9 @@ def parse_args():
     if args.CDF_CSV:
         save_as_csv(args.CDF_CSV[0], symbol_cumsum.reshape([symbol_cumsum.size, 1]))
         logging.info(f'Saved CDF data to:{args.CDF_CSV[0]}')
-    # Step 2: 生成size个在[0,1]之间均匀分布的随机实数f
+    # Step 2: 生成MSG_LEN个在[0,1]之间均匀分布的随机实数f
     logging.debug('Generating Rand array')
-    symbol_random = rand_arr(args.SIZE)
+    symbol_random = rand_arr(args.MSG_LEN)
     # 保存随机数数组到文件中
     if args.RAND_CSV:
         save_as_csv(args.RAND_CSV[0], symbol_random.reshape([symbol_random.size, 1]))
@@ -173,9 +192,9 @@ def parse_args():
     logging.debug('Generating byte source')
     byte_source = gen_msg_arr(symbol_cumsum, symbol_random)
     # 保存信源数据到文件中
-    save_as_byte_source(args.BYTE_SOURCE, byte_source)
-    logging.info(f'Saved ByteSource to:{args.BYTE_SOURCE}')
+    save_as_byte_source(args.OUTPUT, byte_source)
 
 
 if __name__ == '__main__':
     parse_args()
+

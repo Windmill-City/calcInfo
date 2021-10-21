@@ -103,8 +103,6 @@ def parse_args():
     else:
         # 配置日志输出等级
         logging.basicConfig(level=logging.DEBUG if args.verbose else logging.INFO)
-        # 输出命令信息
-        logging.info(f'INPUT:{args.INPUT}, OUTPUT:{args.OUTPUT}')
         # 将文件读入到一个np.array中
         file_arr = open_file_as_binary_array(args.INPUT)
         # 计算概率数组
@@ -115,8 +113,6 @@ def parse_args():
         file_entropy = entropy(p_arr)
         # 附加计算结果到CSV文件
         append_to_csv_by_row(args.OUTPUT, [args.INPUT, file_arr.size, file_entropy])
-        # 输出计算结果保存完成
-        logging.info(f'Saved entropy to:{args.OUTPUT}')
 
         # 启用详细信息输出文件名, 文件大小, 信息熵等信息
         globals()['file_arr'], globals()['p_arr'] = file_arr, p_arr
@@ -136,13 +132,13 @@ def parse_args():
 
         # 若需将概率数组写入文件
         if not not args.export_P:
-            with open(args.export_P, 'a+', newline='') as P_csv:
-                csv_writer = csv.writer(P_csv)
-                csv_writer.writerows(np.squeeze(np.dstack((np.arange(256), p_arr))))
+            with open(args.export_P, 'w', newline='') as P_csv:
+                for i in range(p_arr.size):
+                    P_csv.write('"%d","%g"\n' % (i, p_arr[i]))
                 P_csv.close()
         # 若需将自信息量数组写入文件
         if not not args.export_S:
-            with open(args.export_S, 'a+', newline='') as self_info_csv:
+            with open(args.export_S, 'w', newline='') as self_info_csv:
                 csv_writer = csv.writer(self_info_csv)
                 csv_writer.writerows(np.squeeze(np.dstack((np.arange(256), self_information))))
                 self_info_csv.close()

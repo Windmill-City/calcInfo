@@ -11,7 +11,7 @@ class CalcInfoTestCase(unittest.TestCase):
         self.assertAlmostEqual(np.array(expected).all(), np.array(actual).all())
 
     def test_probability(self):
-        (expected_p, actual_p) = (np.full(8, 0.00390625), calcInfo.probability(np.arange(256, dtype=np.uint8)))
+        (expected_p, actual_p) = (np.full(256, 0.00390625), calcInfo.probability(np.arange(256, dtype=np.uint8)))
         self.assertNpArrAlmostEqual(expected_p, actual_p)
         (expected_p, actual_p) = (np.array([1 if n == 1 else 0 for n in range(256)]),
                                   calcInfo.probability(np.full(256, 1, dtype=np.uint8)))
