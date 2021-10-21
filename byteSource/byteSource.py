@@ -93,6 +93,12 @@ def read_as_probability_distribution(path):
 
 
 def generate_bDMS_extended_source_prob_file(p_true, path):
+    """
+    输出二元离散无记忆信源的8次扩展信源的概率分布文件, csv格式
+    :param p_true: 二元离散无记忆信源中1的概率
+    :param path: CSV文件路径
+    :return:
+    """
     prob = np.array([p_true**(bin(i).count('1'))*(1-p_true)**(8-bin(i).count('1')) for i in range(256)])
     with open(path, 'w') as p_file:
         for i in range(prob.size):
@@ -157,7 +163,7 @@ def parse_args():
     # 输出二元离散无记忆信源的8次扩展信源的概率分布文件
     if args.prob_path:
         p_true, extended_prob_path = args.prob_path
-        if not p_true.isdigit() or 0 > float(p_true) or 1 < float(p_true):
+        if 0 > float(p_true) or 1 < float(p_true):
             parser.error('p_true must be in interval of [0, 1]')
         generate_bDMS_extended_source_prob_file(float(p_true), extended_prob_path)
 
