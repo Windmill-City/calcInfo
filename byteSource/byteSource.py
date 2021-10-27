@@ -97,7 +97,7 @@ def generate_bDMS_extended_source_prob_file(p_true, path):
     输出二元离散无记忆信源的8次扩展信源的概率分布文件, csv格式
     :param p_true: 二元离散无记忆信源中1的概率
     :param path: CSV文件路径
-    :return:
+    :return: None
     """
     prob = np.array([p_true**(bin(i).count('1'))*(1-p_true)**(8-bin(i).count('1')) for i in range(256)])
     with open(path, 'w') as p_file:
@@ -146,8 +146,8 @@ def parse_args():
     parser.add_argument('-R', '--RAND_CSV', action='store', nargs=1,
                         help='Save random array to file, in CSV format')
     # -e 输出二元离散无记忆信源的8次扩展信源的概率分布文件, csv格式
-    parser.add_argument('-e', '--prob_path', metavar='p_true, path',
-                        help='probability of true and the path of the file to be saved', nargs=2)
+    parser.add_argument('-e', '--prob_and_path', metavar='p_true path',
+                        help='takes two arguments: probability of true and the path of the file to be saved', nargs=2)
     # -t - 运行测试
     parser.add_argument('-t', '--test', action="store_true",
                         help='run tests')
@@ -161,8 +161,8 @@ def parse_args():
     logging.debug(f'Command Line:{args}')
 
     # 输出二元离散无记忆信源的8次扩展信源的概率分布文件
-    if args.prob_path:
-        p_true, extended_prob_path = args.prob_path
+    if args.prob_and_path:
+        p_true, extended_prob_path = args.prob_and_path
         if 0 > float(p_true) or 1 < float(p_true):
             parser.error('p_true must be in interval of [0, 1]')
         generate_bDMS_extended_source_prob_file(float(p_true), extended_prob_path)
@@ -170,7 +170,7 @@ def parse_args():
     if args.test:
         logging.info('Begin Unit Test')
         import subprocess
-        subprocess.call(['python', 'TestByteSource.py'])
+        subprocess.call(['python', 'TestByteSource.py'], args.test)
         return
     elif not args.INPUT or not args.OUTPUT or not args.MSG_LEN:
         if not (args.INPUT or args.OUTPUT or args.MSG_LEN):
